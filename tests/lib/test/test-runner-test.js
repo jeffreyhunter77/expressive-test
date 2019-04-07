@@ -29,6 +29,10 @@ class FailureTest extends TestCase {
   didSucceed() { return false; }
 }
 
+class RejectTest extends TestCase {
+  run() { return Promise.reject(new Error("test case rejected")); }
+}
+
 describe("TestRunner", () => {
 
   prop('passed', function() { return this.runner.didPass(); });
@@ -80,6 +84,20 @@ describe("TestRunner", () => {
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
+      });
+
+    });
+
+    context("when a test rejects", () => {
+
+      prop('tests', [RejectTest, AsyncTest]);
+
+      it("does not pass", function() {
+        expect(this.passed).to.be.false;
+      });
+
+      it("runs subsequent tests", function() {
+        expect(AsyncTest.called).to.be.true;
       });
 
     });
