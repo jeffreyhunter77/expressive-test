@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+
+var TestLoader = require('../lib/test/test-loader')
+  , TestRegistry = require('../lib/test/test-registry')
+  , TestRunner = require('../lib/test/test-runner')
+  , TestReporter = require('../lib/test/test-reporter')
+;
+
+let sources = ['tests'];
+if (process.argv.length > 2)
+  sources = process.argv.slice(2);
+
+new TestLoader(sources).load();
+
+let runner = new TestRunner(TestRegistry.tests());
+let reporter = null;
+
+TestRegistry.setup()
+  .then(function() {
+     reporter = new TestReporter(runner);
+     return runner.run();
+  })
+  .then(function() {
+    return reporter.complete();
+  })
+  .then(function() {
+    return TestRegistry.teardown();
+  })
+  .then(function() {
+    if (!runner.didPass()) process.exit(1);
+  });
