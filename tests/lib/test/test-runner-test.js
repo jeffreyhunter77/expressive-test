@@ -29,107 +29,61 @@ class FailureTest extends TestCase {
   didSucceed() { return false; }
 }
 
-class TestRunnerTestSuite extends TestSuite {
+describe("TestRunner", () => {
 
-  description() { return "TestRunner"; }
+  prop('passed', function() { return this.runner.didPass(); });
+  prop('runner', function() { return new TestRunner(this.tests); }, {memoize: true});
 
-  tests() {
-    class TestRunnerTestSuiteContext extends TestCase {
-      get runner() { return this._runner = this._runner || new TestRunner(this.tests); }
-      get passed() { return this.runner.didPass(); }
-    };
+  context("with one or more tests", () => {
 
-    return [
-      class extends TestRunnerTestSuiteContext {
-        description() { return "runs all tests"; }
+    prop('tests', [SyncTest, AsyncTest]);
 
-        get tests() { return [SyncTest, AsyncTest]; }
+    before(function() { return this.runner.run(); });
 
-        _test() {
-          return this.runner.run()
-            .then(() => {
-              expect(SyncTest.called).to.be.true;
-              expect(AsyncTest.called).to.be.true;
-            });
-        }
-      },
+    it("runs all tests", function() {
+      expect(SyncTest.called).to.be.true;
+      expect(AsyncTest.called).to.be.true;
+    });
 
-      class extends TestRunnerTestSuiteContext {
-        description() { return "with succeeding tests it passes"; }
 
-        get tests() { return [SyncTest, AsyncTest]; }
+    context("when all tests succeed", () => {
 
-        _test() {
-          return this.runner.run()
-            .then(() => expect(this.passed).to.be.true);
-        }
-      },
+      it("passes", function() {
+        expect(this.passed).to.be.true;
+      });
 
-      class extends TestSuite {
-        description() { return "when a test constructor throws an exception"; }
+    });
 
-        tests() {
-          class TestRunnerCtorExceptionContext extends TestRunnerTestSuiteContext {
-            get tests() { return [ConstructorErrorTest]; }
-          }
+    context("when a test constructor throws an exception", () => {
 
-          return [
-            class extends TestRunnerCtorExceptionContext {
-              description() { return "does not pass"; }
+      prop('tests', [ConstructorErrorTest]);
 
-              _test() {
-                return this.runner.run()
-                  .then(() => expect(this.passed).to.be.false);
-              }
-            }
-          ];
-        }
-      },
+      it("does not pass", function() {
+        expect(this.passed).to.be.false;
+      });
 
-      class extends TestSuite {
-        description() { return "when a test throws an exception"; }
+    });
 
-        tests() {
-          class TestRunnerExceptionContext extends TestRunnerTestSuiteContext {
-            get tests() { return [ExceptionTest]; }
-          }
+    context("when a test throws an exception", () => {
 
-          return [
-            class extends TestRunnerExceptionContext {
-              description() { return "does not pass"; }
+      prop('tests', [ExceptionTest]);
 
-              _test() {
-                return this.runner.run()
-                  .then(() => expect(this.passed).to.be.false);
-              }
-            }
-          ];
-        }
-      },
+      it("does not pass", function() {
+        expect(this.passed).to.be.false;
+      });
 
-      class extends TestSuite {
-        description() { return "when a test fails"; }
+    });
 
-        tests() {
-          class TestRunnerFailureContext extends TestRunnerTestSuiteContext {
-            get tests() { return [FailureTest, SyncTest]; }
-          }
+    context("when a test fails", () => {
 
-          return [
-            class extends TestRunnerFailureContext {
-              description() { return "does not pass"; }
+      prop('tests', [FailureTest]);
 
-              _test() {
-                return this.runner.run()
-                  .then(() => expect(this.passed).to.be.false);
-              }
-            }
-          ];
-        }
-      }
-    ];
-  }
+      it("does not pass", function() {
+        expect(this.passed).to.be.false;
+      });
 
-}
+    });
 
-TestRegistry.add(TestRunnerTestSuite);
+  });
+
+});
