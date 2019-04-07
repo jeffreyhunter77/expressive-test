@@ -22,37 +22,12 @@ describe("TestRunner", () => {
   prop('passed', function() { return this.runner.didPass(); });
   prop('runner', function() { return new TestRunner(this.tests); }, MEMOIZE);
 
-  prop('firstConstructor', newStub,        MEMOIZE);
-  prop('firstTestMethod',  newStub,        MEMOIZE);
-  prop('secondTestMethod', newResolveStub, MEMOIZE);
+  prop('firstConstructor', newStub,         MEMOIZE);
+  prop('firstTestMethod',  newStub,         MEMOIZE);
+  prop('secondTestMethod', newResolveStub,  MEMOIZE);
 
-  prop('FirstTest', function() {
-    let ctor = this.firstConstructor;
-
-    class FirstTestCase extends TestCase {
-      constructor(container) {
-        super(container);
-        ctor();
-      }
-    }
-
-    FirstTestCase.prototype._test = this.firstTestMethod;
-
-    if (this.runMethod)
-      FirstTestCase.prototype.run = this.runMethod;
-    if (this.didSucceedMethod)
-      FirstTestCase.prototype.didSucceed = this.didSucceedMethod;
-
-    return FirstTestCase;
-  }, MEMOIZE);
-
-  prop('SecondTest', function() {
-    class SecondTestCase extends TestCase {
-    }
-    SecondTestCase.prototype._test = this.secondTestMethod;
-
-    return SecondTestCase;
-  }, MEMOIZE);
+  prop('FirstTest',  newTestCase('first'),  MEMOIZE);
+  prop('SecondTest', newTestCase('second'), MEMOIZE);
 
 
   context("with one or more tests", () => {
@@ -97,7 +72,7 @@ describe("TestRunner", () => {
 
     context("when a test fails", () => {
 
-      prop('didSucceedMethod', newFalseStub, MEMOIZE);
+      prop('firstDidSucceedMethod', newFalseStub, MEMOIZE);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -107,7 +82,7 @@ describe("TestRunner", () => {
 
     context("when a test rejects", () => {
 
-      prop('runMethod', newRejectStub, MEMOIZE);
+      prop('firstRunMethod', newRejectStub, MEMOIZE);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -122,3 +97,28 @@ describe("TestRunner", () => {
   });
 
 });
+
+
+function newTestCase(prefix) {
+  return function() {
+    let ctor = this[prefix + 'Constructor'];
+
+    let decl = class extends TestCase {
+      constructor(container) {
+        super(container);
+        if (ctor) ctor();
+      }
+    }
+
+    decl.prototype._test = this[prefix + 'TestMethod'];
+    decl._prefix = () => prefix;
+
+    if (this[prefix + 'RunMethod'])
+      decl.prototype.run = this[prefix + 'RunMethod'];
+
+    if (this[prefix + 'DidSucceedMethod'])
+      decl.prototype.didSucceed = this[prefix + 'DidSucceedMethod'];
+
+    return decl;
+  };
+}
