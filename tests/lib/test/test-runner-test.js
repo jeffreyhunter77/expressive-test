@@ -2,51 +2,68 @@ require('../../../init');
 
 var TestRunner = require('../../../lib/test/test-runner');
 
-class SyncTest extends TestCase {
-  constructor(container) { super(container); SyncTest.called = false; }
-  _test() { SyncTest.called = true; }
-}
+var sinon = require('sinon')
+  , chai = require('chai')
+  , sinonChai = require('sinon-chai')
+;
 
-class AsyncTest extends TestCase {
-  constructor(container) { super(container); AsyncTest.called = false; }
-  _test() {
-    return new Promise(resolve => process.nextTick(resolve))
-      .then(() => AsyncTest.called = true)
-  }
-}
+chai.use(sinonChai);
 
-class ConstructorErrorTest extends TestCase {
-  constructor(container) { super(container); throw new Error("constructor failure"); }
-  _test() { }
-}
+const MEMOIZE = {memoize: true};
 
-class ExceptionTest extends TestCase {
-  _test() { throw new Error("test failure"); }
-}
-
-class FailureTest extends TestCase {
-  _test() { }
-  didSucceed() { return false; }
-}
-
-class RejectTest extends TestCase {
-  run() { return Promise.reject(new Error("test case rejected")); }
-}
+function newStub()        { return sinon.stub(); }
+function newFalseStub()   { return sinon.stub().returns(false); }
+function newErrorStub()   { return sinon.stub().throws(new Error('failure')); }
+function newResolveStub() { return sinon.stub().resolves(1); }
+function newRejectStub()  { return sinon.stub().rejects(new Error('failure')); }
 
 describe("TestRunner", () => {
 
   prop('passed', function() { return this.runner.didPass(); });
-  prop('runner', function() { return new TestRunner(this.tests); }, {memoize: true});
+  prop('runner', function() { return new TestRunner(this.tests); }, MEMOIZE);
+
+  prop('firstConstructor', newStub,        MEMOIZE);
+  prop('firstTestMethod',  newStub,        MEMOIZE);
+  prop('secondTestMethod', newResolveStub, MEMOIZE);
+
+  prop('FirstTest', function() {
+    let ctor = this.firstConstructor;
+
+    class FirstTestCase extends TestCase {
+      constructor(container) {
+        super(container);
+        ctor();
+      }
+    }
+
+    FirstTestCase.prototype._test = this.firstTestMethod;
+
+    if (this.runMethod)
+      FirstTestCase.prototype.run = this.runMethod;
+    if (this.didSucceedMethod)
+      FirstTestCase.prototype.didSucceed = this.didSucceedMethod;
+
+    return FirstTestCase;
+  }, MEMOIZE);
+
+  prop('SecondTest', function() {
+    class SecondTestCase extends TestCase {
+    }
+    SecondTestCase.prototype._test = this.secondTestMethod;
+
+    return SecondTestCase;
+  }, MEMOIZE);
+
 
   context("with one or more tests", () => {
 
-    prop('tests', [SyncTest, AsyncTest]);
+    prop('tests', function() { return [this.FirstTest, this.SecondTest]; }, MEMOIZE);
 
     before(function() { return this.runner.run(); });
 
     it("runs all tests", function() {
-      expect(SyncTest.called).to.be.true;
-      expect(AsyncTest.called).to.be.true;
+      expect(this.firstTestMethod).to.have.been.called;
+      expect(this.secondTestMethod).to.have.been.called;
     });
 
 
@@ -60,7 +77,7 @@ describe("TestRunner", () => {
 
     context("when a test constructor throws an exception", () => {
 
-      prop('tests', [ConstructorErrorTest]);
+      prop('firstConstructor', newErrorStub, MEMOIZE);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -70,7 +87,7 @@ describe("TestRunner", () => {
 
     context("when a test throws an exception", () => {
 
-      prop('tests', [ExceptionTest]);
+      prop('firstTestMethod', newErrorStub, MEMOIZE);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -80,7 +97,7 @@ describe("TestRunner", () => {
 
     context("when a test fails", () => {
 
-      prop('tests', [FailureTest]);
+      prop('didSucceedMethod', newFalseStub, MEMOIZE);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -90,14 +107,14 @@ describe("TestRunner", () => {
 
     context("when a test rejects", () => {
 
-      prop('tests', [RejectTest, AsyncTest]);
+      prop('runMethod', newRejectStub, MEMOIZE);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
       });
 
       it("runs subsequent tests", function() {
-        expect(AsyncTest.called).to.be.true;
+        expect(this.secondTestMethod).to.have.been.called;
       });
 
     });
