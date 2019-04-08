@@ -8,154 +8,78 @@ var sinon = require('sinon')
 
 chai.use(sinonChai);
 
-class DSLDescribeTestSuite extends TestSuite {
-  description() { return "describe()"; }
+describe("describe()", () => {
 
-  tests() {
-    class DSLDescribeTestContext extends TestCase {
-      get describedItem() { return "item"; }
-      get body() { return this._body = this._body || sinon.spy(); }
-      get result() { return dsl.describe(this.describedItem, this.body); }
+  prop('describedItem',   'item');
+  prop('body',            function() { return sinon.spy(); }, {memoize: true});
+  prop('result',          function() { return dsl.describe(this.describedItem, this.body); });
+  prop('resultInstance',  function() { return new this.result(); });
+  prop('testDescription', function() { return this.resultInstance.description(); });
+  prop('testContext',     function() { return new this.result._context(); });
 
-      _test() {
-        sinon.stub(TestRegistry, 'add');
-        try {
-          this._test2();
-        } catch (e) {
-          throw e;
-        } finally {
-          TestRegistry.add.restore();
-        }
-      }
-    }
+  before(function() { sinon.stub(TestRegistry, 'add'); });
+  after(function()  { TestRegistry.add.restore(); });
 
-    return [
+  it("creates a test suite", function() {
+    expect(this.result.prototype).to.be.an.instanceof(TestSuite);
+  });
 
-      class extends DSLDescribeTestContext {
-        description() { return "creates a test suite"; }
+  it("sets the description", function() {
+    expect(this.testDescription).to.equal(this.describedItem);
+  });
 
-        _test2() {
-          expect(this.result.prototype).to.be.an.instanceof(TestSuite);
-        }
-      },
+  context("when a constructor is provided", function() {
 
-      class extends DSLDescribeTestContext {
-        description() { return "sets the description"; }
+    prop('describedItem', function() { return class Item { }; }, {memoize: true});
 
-        get testDescription() { return new this.result().description(); }
+    it("uses the constructor name as the description", function() {
+      expect(this.testDescription).to.equal('Item');
+    });
 
-        _test2() {
-          expect(this.testDescription).to.equal(this.describedItem);
-        }
-      },
+    it("saves the constructor in the describedClass property", function() {
+      expect(this.testContext.describedClass).to.equal(this.describedItem);
+    });
 
-      class extends TestSuite {
-        description() { return "when a constructor is provided"; }
+  });
 
-        tests() {
-          class DSLDescribeCtorTestContext extends DSLDescribeTestContext {
-            get describedItem() { return this._class = this._class || class Item { }; }
-          }
+  it("evaluates the body", function() {
+    this.result;
+    expect(this.body).to.have.been.calledOnce;
+  });
 
-          return [
-            class extends DSLDescribeCtorTestContext {
-              description() { return "uses the constructor name as the description"; }
+  context("standalone", function() {
 
-              get testDescription() { return new this.result().description(); }
+    it("registers the test", function() {
+      let testClass = this.result;
+      expect(TestRegistry.add).to.have.been.calledWith(testClass);
+    });
 
-              _test2() {
-                expect(this.testDescription).to.equal('Item');
-              }
-            },
+  });
 
-            class extends DSLDescribeCtorTestContext {
-              description() { return "saves the constructor in the describedClass property"; }
+  context("nested", function() {
 
-              get testContext() { return new this.result._context(); }
+    prop('result', function() {
+      let innerClass;
 
-              _test2() {
-                expect(this.testContext.describedClass).to.equal(this.describedItem);
-              }
-            }
-          ];
-        }
-      },
+      this.containerClass = dsl.describe(this.describedItem, () => {
+        innerClass = dsl.describe("inside", () => {});
+      });
 
-      class extends DSLDescribeTestContext {
-        description() { return "evaluates the body"; }
+      return innerClass;
+    });
 
-        _test2() {
-          this.result
-          expect(this.body).to.have.been.calledOnce;
-        }
-      },
+    it("does not register the test", function() {
+      let testClass = this.result;
+      expect(TestRegistry.add).to.not.have.been.calledWith(testClass);
+    });
 
-      class extends TestSuite {
-        description() { return "standalone"; }
+    it("adds the test to the containing suite", function() {
+      let testClass = this.result
+      let containerInst = new this.containerClass();
 
-        tests() {
-          class DSLDescribeStandaloneTestContext extends DSLDescribeTestContext {
-          }
+      expect(containerInst.tests()).to.be.an('array').that.includes(testClass);
+    });
 
-          return [
+  });
 
-            class extends DSLDescribeStandaloneTestContext {
-              description() { return "registers the test"; }
-
-              _test2() {
-                let testClass = this.result;
-                expect(TestRegistry.add).to.have.been.calledWith(testClass);
-              }
-            }
-
-          ];
-        }
-      },
-
-      class extends TestSuite {
-        description() { return "nested"; }
-
-        tests() {
-          class DSLDescribeNestedTestContext extends DSLDescribeTestContext {
-            get result() {
-              let innerClass;
-
-              this.containerClass = dsl.describe(this.describedItem, () => {
-                innerClass = dsl.describe("inside", () => {});
-              });
-
-              return innerClass;
-            }
-          }
-
-          return [
-
-            class extends DSLDescribeNestedTestContext {
-              description() { return "does not register the test"; }
-
-              _test2() {
-                let testClass = this.result;
-                expect(TestRegistry.add).to.not.have.been.calledWith(testClass);
-              }
-            },
-
-            class extends DSLDescribeNestedTestContext {
-              description() { return "adds the test to the containing suite"; }
-
-              _test2() {
-                let testClass = this.result
-                let containerInst = new this.containerClass();
-
-                expect(containerInst.tests()).to.be.an('array').that.includes(testClass);
-              }
-            }
-
-          ];
-        }
-      }
-
-    ];
-  }
-}
-
-TestRegistry.add(DSLDescribeTestSuite);
+});
