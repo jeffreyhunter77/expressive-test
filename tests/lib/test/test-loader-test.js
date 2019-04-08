@@ -2,83 +2,51 @@ require('../../../init');
 
 var TestLoader = require('../../../lib/test/test-loader');
 
-class TestLoaderTestSuite extends TestSuite {
+describe(TestLoader, () => {
 
-  description() { return "TestLoader"; }
+  prop('loader',       function() { return new TestLoader(this.sources); });
+  prop('loadedValues', function() { return this.loader.load().map((t) => t.value); });
 
-  tests() {
-    class TestLoaderTestSuiteContext extends TestCase {
-      get loader() { return new TestLoader(this.sources); }
-      get loadedValues() { return this.loader.load().map((t) => t.value); }
-    };
+  context("with a test file source", () => {
 
-    return [
-      class extends TestLoaderTestSuiteContext {
-        description() { return "loads test files"; }
+    prop('sources', ['testdata/singlefile-test.js']);
 
-        get sources() { return ['testdata/singlefile-test.js']; }
+    it("loads the test file", function() {
+      expect(this.loadedValues).to.eql(['singlefile']);
+    });
 
-        _test() {
-          expect(this.loadedValues).to.eql(['singlefile']);
-        }
-      },
+  });
 
-      class extends TestLoaderTestSuiteContext {
-        description() { return "ignores non-test files"; }
+  context("with a non-test file source", () => {
 
-        get sources() { return ['testdata/singlemodule.js']; }
+    prop('sources', ['testdata/singlemodule.js']);
 
-        _test() {
-          expect(this.loadedValues).to.not.include('singlemodule');
-        }
-      },
+    it("ignores the non-test file", function() {
+      expect(this.loadedValues).to.not.include('singlemodule');
+    });
 
-      class extends TestSuite {
-        description() { return "with a directory"; }
+  });
 
-        tests() {
-          class TestLoaderDirectoryTestSuiteContext extends TestLoaderTestSuiteContext {
-            get sources() { return ['testdata/testdir']; }
-          }
+  context("with a directory", () => {
 
-          return [
-            class extends TestLoaderDirectoryTestSuiteContext {
-              description() { return "loads tests from the directory"; }
+    prop('sources', ['testdata/testdir']);
 
-              _test() {
-                expect(this.loadedValues).to.include.members(['onetest','twotest']);
-              }
-            },
+    it("loads tests from the directory", function() {
+      expect(this.loadedValues).to.include.members(['onetest','twotest']);
+    });
 
-            class extends TestLoaderDirectoryTestSuiteContext {
-              description() { return "recurses subdirectories"; }
+    it("recurses subdirectories", function() {
+      expect(this.loadedValues).to.include('directorytest');
+    });
 
-              _test() {
-                expect(this.loadedValues).to.include('directorytest');
-              }
-            },
+    it("ignores non-test files", function() {
+      expect(this.loadedValues).to.not.include('regularfile');
+    });
 
-            class extends TestLoaderDirectoryTestSuiteContext {
-              description() { return "ignores non-test files"; }
+    it("ignores directories themselves", function() {
+      expect(this.loadedValues).to.not.include('indexfile');
+    });
 
-              _test() {
-                expect(this.loadedValues).to.not.include('regularfile');
-              }
-            },
+  });
 
-            class extends TestLoaderDirectoryTestSuiteContext {
-              description() { return "ignores directories themselves"; }
-
-              _test() {
-                expect(this.loadedValues).to.not.include('indexfile');
-              }
-            }
-          ];
-        }
-      }
-    ];
-  }
-
-}
-
-TestRegistry.add(TestLoaderTestSuite);
+});
