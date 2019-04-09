@@ -20,3 +20,5 @@ global.after = dsl.after;
 global.afterAll = dsl.afterAll;
 
 global.expect = chai.expect;
+
+module.exports.chai = chai;
