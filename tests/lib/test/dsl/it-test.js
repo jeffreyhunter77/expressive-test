@@ -8,104 +8,56 @@ var sinon = require('sinon')
 
 chai.use(sinonChai);
 
-class DSLItTestSuite extends TestSuite {
-  description() { return "it()"; }
+describe("it()", () => {
 
-  tests() {
-    class DSLItTestContext extends TestCase {
-      get summary() { return "assertion summary"; }
-      get body() { return this._body = this._body || sinon.spy(); }
-      get result() { return dsl.it(this.summary, this.body); }
+  prop('summary',         'assertion summary');
+  prop('body',            function() { return sinon.spy(); }, {memoize: true});
+  prop('result',          function() { return dsl.it(this.summary, this.body); });
+  prop('testInstance',    function() { return new this.result(); });
+  prop('testDescription', function() { return this.testInstance.description(); });
 
-      _test() {
-        sinon.stub(TestRegistry, 'add');
-        try {
-          this._test2();
-        } catch (e) {
-          throw e;
-        } finally {
-          TestRegistry.add.restore();
-        }
-      }
-    }
+  before(function() { sinon.stub(TestRegistry, 'add'); });
+  after(function()  { TestRegistry.add.restore(); });
 
-    return [
+  it("creates a test case", function() {
+    expect(this.result.prototype).to.be.an.instanceof(TestCase);
+  });
 
-      class extends DSLItTestContext {
-        description() { return "creates a test case"; }
+  it("sets the description", function() {
+    expect(this.testDescription).to.equal(this.summary);
+  });
 
-        _test2() {
-          expect(this.result.prototype).to.be.an.instanceof(TestCase);
-        }
-      },
+  it("does not evaluate the body", function() {
+    this.result;
+    expect(this.body).to.not.have.been.called;
+  });
 
-      class extends DSLItTestContext {
-        description() { return "sets the description"; }
+  it("evaluates the body during the test run", function() {
+    return this.testInstance.run()
+      .then(() => {
+        expect(this.body).to.have.been.calledOnce;
+      });
+  });
 
-        get testDescription() { return new this.result().description(); }
+  context("nested in a describe", function() {
 
-        _test2() {
-          expect(this.testDescription).to.equal(this.summary);
-        }
-      },
+    prop('result', function() {
+      let innerClass;
 
-      class extends DSLItTestContext {
-        description() { return "does not evaluate the body"; }
+      this.containerClass = dsl.describe("outside", () => {
+        innerClass = dsl.it("inside", () => {});
+      });
 
-        _test2() {
-          this.result;
-          expect(this.body).to.not.have.been.called;
-        }
-      },
+      return innerClass;
+    });
 
-      class extends DSLItTestContext {
-        description() { return "evaluates the body during the test run"; }
+    it("adds the test to the containing suite", function() {
+      let testClass = this.result
+      let containerInst = new this.containerClass();
 
-        get testInstance() { return new this.result(); }
+      expect(containerInst.tests()).to.be.an('array').that.includes(testClass);
+    });
 
-        _test() {
-          return this.testInstance.run()
-            .then(() => {
-              expect(this.body).to.have.been.calledOnce;
-            });
-        }
-      },
+  });
 
-      class extends TestSuite {
-        description() { return "nested in a describe"; }
-
-        tests() {
-          class DSLItNestedTestContext extends DSLItTestContext {
-            get result() {
-              let innerClass;
-
-              this.containerClass = dsl.describe("outside", () => {
-                innerClass = dsl.it("inside", () => {});
-              });
-
-              return innerClass;
-            }
-          }
-
-          return [
-
-            class extends DSLItNestedTestContext {
-              description() { return "adds the test to the containing suite"; }
-
-              _test2() {
-                let testClass = this.result
-                let containerInst = new this.containerClass();
-
-                expect(containerInst.tests()).to.be.an('array').that.includes(testClass);
-              }
-            }
-
-          ];
-        }
-      }
-
-    ];
-  }
-}
-
-TestRegistry.add(DSLItTestSuite);
+});
