@@ -12,6 +12,7 @@ global.TestRegistry = TestRegistry;
 global.describe = dsl.describe;
 global.context = dsl.describe;
 global.it = dsl.it;
+global.xit = dsl.xit;
 global.property = dsl.property;
 global.prop = dsl.property;
 global.before = dsl.before;

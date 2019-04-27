@@ -9,7 +9,7 @@ chai.use(sinonChai);
 
 describe(TestCase, () => {
 
-  prop('subject', function() { return new this.describedClass(); });
+  prop('subject', function() { return new this.describedClass(); }, {memoize: true});
 
   describe(".constructor()", () => {
     context("when called no arguments", () => {
@@ -58,6 +58,7 @@ describe(TestCase, () => {
     prop('testStartedListener', function() { return sinon.spy(); }, {memoize: true});
     prop('testCompletedListener', function() { return sinon.spy(); }, {memoize: true});
     prop('testErrorListener', function() { return sinon.spy(); }, {memoize: true});
+    prop('testSkippedListener', function() { return sinon.spy(); }, {memoize: true});
 
     prop('subject', function() {
       class CustomTestCase extends TestCase {
@@ -68,10 +69,12 @@ describe(TestCase, () => {
       subject.addListener('test-started', this.testStartedListener);
       subject.addListener('test-completed', this.testCompletedListener);
       subject.addListener('test-error', this.testErrorListener);
+      subject.addListener('test-skipped', this.testSkippedListener);
 
       return subject;
     }, {memoize: true});
 
+    before(function() { if (this.pending) this.subject.setPending(true) });
     before(function() { return this.subject.run(); });
 
     it("invokes _test()", function() {
@@ -95,6 +98,10 @@ describe(TestCase, () => {
         expect(this.testErrorListener).to.not.have.been.called;
       });
 
+      it("does not emit a test-skipped event", function() {
+        expect(this.testSkippedListener).to.not.have.been.called;
+      });
+
       it("emits a test-completed event", function() {
         expect(this.testCompletedListener).to.have.been.calledWith(this.subject);
       });
@@ -114,8 +121,42 @@ describe(TestCase, () => {
         expect(this.testErrorListener.firstCall.args[1]).to.be.an.instanceof(Error);
       });
 
+      it("does not emit a test-skipped event", function() {
+        expect(this.testSkippedListener).to.not.have.been.called;
+      });
+
       it("emits a test-completed event", function() {
         expect(this.testCompletedListener).to.have.been.calledWith(this.subject);
+      });
+    }
+
+    function itBehavesLikeAPendingTest() {
+      it("resolves", function() {
+        return this.subject.run().then(() => {});
+      });
+
+      it("does not succeed", function() {
+        expect(this.subject.didSucceed()).to.be.false;
+      });
+
+      it("does not emit a test-started event", function() {
+        expect(this.testStartedListener).to.not.have.been.called;
+      });
+
+      it("does not emit a test-error event", function() {
+        expect(this.testErrorListener).to.not.have.been.called;
+      });
+
+      it("does not emit a test-completed event", function() {
+        expect(this.testCompletedListener).to.not.have.been.called;
+      });
+
+      it("emits a test-skipped event", function() {
+        expect(this.testSkippedListener).to.have.been.calledWith(this.subject);
+      });
+
+      it("does not call _test()", function() {
+        expect(this._testFunction).to.not.have.been.called;
       });
     }
 
@@ -143,6 +184,12 @@ describe(TestCase, () => {
       });
       itBehavesLikeAFailedTest();
     });
+
+    context("when the test is marked pending", () => {
+      prop('pending', true);
+      itBehavesLikeAPendingTest();
+    });
+
   });
 
   describe(".didSucceed()", () => {
@@ -156,6 +203,20 @@ describe(TestCase, () => {
   describe(".isSuite()", () => {
     it("returns false", function() {
       expect(this.subject.isSuite()).to.be.false;
+    });
+  });
+
+  describe('.isPending()', () => {
+    it("returns false", function() {
+      expect(this.subject.isPending()).to.be.false;
+    });
+
+    context("when setPending() has been called with a truthy value", () => {
+      before(function() { this.subject.setPending(true); });
+
+      it("returns true", function() {
+        expect(this.subject.isPending()).to.be.true;
+      });
     });
   });
 

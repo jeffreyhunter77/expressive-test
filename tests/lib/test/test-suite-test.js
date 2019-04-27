@@ -142,6 +142,16 @@ describe(TestSuite, () => {
         });
       });
 
+      context('with a pending test', () => {
+        prop('tests', function() {
+          return this.testFunctions.map((f, i) => it(`test #${i}`));
+        }, MEMOIZE);
+
+        it('succeeds', function() {
+          expect(this.subject.didSucceed()).to.be.true;
+        });
+      });
+
       context("with a test whose constructor throws", () => {
         prop('errorTest', function() {
           return class extends TestCase {

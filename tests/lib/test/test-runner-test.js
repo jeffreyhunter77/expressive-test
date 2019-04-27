@@ -50,6 +50,16 @@ describe("TestRunner", () => {
 
     });
 
+    context("when a test is pending", () => {
+
+      prop('firstConstructor', () => function() { this.setPending(true); },  MEMOIZE);
+
+      it("passes", function() {
+        expect(this.passed).to.be.true;
+      });
+
+    });
+
     context("when a test constructor throws an exception", () => {
 
       prop('firstConstructor', newErrorStub, MEMOIZE);
@@ -106,7 +116,7 @@ function newTestCase(prefix) {
     let decl = class extends TestCase {
       constructor(container) {
         super(container);
-        if (ctor) ctor();
+        if (ctor) ctor.apply(this);
       }
     }
 

@@ -39,6 +39,26 @@ describe("it()", () => {
       });
   });
 
+  context("without a body", function() {
+
+    prop('result', function() { return dsl.it(this.summary); });
+
+    it("sets the test to pending", function() {
+      expect(this.testInstance.isPending()).to.be.true;
+    });
+
+  });
+
+  context("when called as xit", function() {
+
+    prop('result', function() { return dsl.xit(this.summary, this.body); });
+
+    it("sets the test to pending", function() {
+      expect(this.testInstance.isPending()).to.be.true;
+    });
+
+  });
+
   context("nested in a describe", function() {
 
     prop('result', function() {
