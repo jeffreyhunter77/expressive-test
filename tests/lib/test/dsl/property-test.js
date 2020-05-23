@@ -1,5 +1,13 @@
 require('../../../../init');
 
+var sinon = require('sinon')
+  , chai = require('chai')
+  , sinonChai = require('sinon-chai')
+;
+
+chai.use(sinonChai);
+
+
 describe("property()", () => {
 
   property('one', function() { return 1; });
@@ -36,12 +44,36 @@ describe("property()", () => {
 
   });
 
-  context('when called with a memoize option', () => {
+  context('when called without a memoize option', () => {
 
-    property('subject', function () { return new Object(); }, {memoize: true});
+    property('subject', function () { return new Object(); });
 
     it("memoizes the function", function() {
       expect(this.subject).to.equal(this.subject);
+    });
+
+    context("when the function returns undefined", () => {
+
+      let fn = sinon.stub();
+
+      property('subject', fn);
+
+      before(function() { this.subject; this.subject; });
+
+      it("still memoizes the function", function() {
+        expect(fn).to.have.been.calledOnce;
+      });
+
+    });
+
+  });
+
+  context('when called with a "memoize: false" option', () => {
+
+    property('subject', function () { return new Object(); }, {memoize: false});
+
+    it("does not memoize the function", function() {
+      expect(this.subject).to.not.equal(this.subject);
     });
 
   });

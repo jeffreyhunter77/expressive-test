@@ -9,14 +9,12 @@ var chai = require('chai')
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-const MEMOIZE = {memoize: true};
-
 describe('TestRegistry', () => {
 
-  prop('registry',        function() { return new TestRegistry.constructor(); }, MEMOIZE);
-  prop('exampleTest',     function() { return class extends TestCase {}; }, MEMOIZE);
+  prop('registry',        function() { return new TestRegistry.constructor(); });
+  prop('exampleTest',     function() { return class extends TestCase {}; });
   prop('registeredTests', function() { return this.registry._tests; });
-  prop('callback',        function() { return sinon.spy(); }, MEMOIZE);
+  prop('callback',        function() { return sinon.spy(); });
 
   describe('.add()', () => {
 

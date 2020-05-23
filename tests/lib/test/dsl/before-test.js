@@ -7,13 +7,11 @@ var sinon = require('sinon')
 
 chai.use(sinonChai);
 
-const MEMOIZE = {memoize: true};
-
 function newStub() { return sinon.stub().resolves(true); }
 
 describe("before()", () => {
 
-  prop('callback', newStub, MEMOIZE);
+  prop('callback', newStub);
 
   before(function() { return this.callback(); });
 
@@ -31,8 +29,8 @@ describe("before()", () => {
 
   context("called sequentially", () => {
 
-    prop('firstCallback',  newStub, MEMOIZE);
-    prop('secondCallback', newStub, MEMOIZE);
+    prop('firstCallback',  newStub);
+    prop('secondCallback', newStub);
 
     before(function() { return this.firstCallback(); });
     before(function() { return this.secondCallback(); });

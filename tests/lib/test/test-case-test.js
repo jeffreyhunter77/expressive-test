@@ -9,7 +9,7 @@ chai.use(sinonChai);
 
 describe(TestCase, () => {
 
-  prop('subject', function() { return new this.describedClass(); }, {memoize: true});
+  prop('subject', function() { return new this.describedClass(); });
 
   describe(".constructor()", () => {
     context("when called no arguments", () => {
@@ -20,7 +20,7 @@ describe(TestCase, () => {
 
     context("when called with a container", () => {
       prop('subject', function() { return new this.describedClass(this.parent); });
-      prop('parent', function() { return {}; }, {memoize: true});
+      prop('parent', function() { return {}; });
 
       it("references the container", function() {
         expect(this.subject.container).to.equal(this.parent);
@@ -44,7 +44,7 @@ describe(TestCase, () => {
     context("when called with a container", () => {
       prop('subject', function() { return new this.describedClass(this.parent); });
       prop('parentClass', function() { return TestSuite; });
-      prop('parent', function() { return new this.parentClass; }, {memoize: true});
+      prop('parent', function() { return new this.parentClass; });
 
       it("prepends the parent description", function() {
         expect(this.subject.fullDescription()).to
@@ -54,11 +54,11 @@ describe(TestCase, () => {
   });
 
   describe(".run()", () => {
-    prop('_testFunction', function() { return sinon.spy(); }, {memoize: true});
-    prop('testStartedListener', function() { return sinon.spy(); }, {memoize: true});
-    prop('testCompletedListener', function() { return sinon.spy(); }, {memoize: true});
-    prop('testErrorListener', function() { return sinon.spy(); }, {memoize: true});
-    prop('testSkippedListener', function() { return sinon.spy(); }, {memoize: true});
+    prop('_testFunction', function() { return sinon.spy(); });
+    prop('testStartedListener', function() { return sinon.spy(); });
+    prop('testCompletedListener', function() { return sinon.spy(); });
+    prop('testErrorListener', function() { return sinon.spy(); });
+    prop('testSkippedListener', function() { return sinon.spy(); });
 
     prop('subject', function() {
       class CustomTestCase extends TestCase {
@@ -72,7 +72,7 @@ describe(TestCase, () => {
       subject.addListener('test-skipped', this.testSkippedListener);
 
       return subject;
-    }, {memoize: true});
+    });
 
     before(function() { if (this.pending) this.subject.setPending(true) });
     before(function() { return this.subject.run(); });

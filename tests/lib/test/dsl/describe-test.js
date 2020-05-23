@@ -11,7 +11,7 @@ chai.use(sinonChai);
 describe("describe()", () => {
 
   prop('describedItem',   'item');
-  prop('body',            function() { return sinon.spy(); }, {memoize: true});
+  prop('body',            function() { return sinon.spy(); });
   prop('result',          function() { return dsl.describe(this.describedItem, this.body); });
   prop('resultInstance',  function() { return new this.result(); });
   prop('testDescription', function() { return this.resultInstance.description(); });
@@ -30,7 +30,7 @@ describe("describe()", () => {
 
   context("when a constructor is provided", function() {
 
-    prop('describedItem', function() { return class Item { }; }, {memoize: true});
+    prop('describedItem', function() { return class Item { }; });
 
     it("uses the constructor name as the description", function() {
       expect(this.testDescription).to.equal('Item');

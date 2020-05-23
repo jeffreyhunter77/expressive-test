@@ -9,8 +9,6 @@ var sinon = require('sinon')
 
 chai.use(sinonChai);
 
-const MEMOIZE = {memoize: true};
-
 function newStub()        { return sinon.stub(); }
 function newFalseStub()   { return sinon.stub().returns(false); }
 function newErrorStub()   { return sinon.stub().throws(new Error('failure')); }
@@ -20,19 +18,19 @@ function newRejectStub()  { return sinon.stub().rejects(new Error('failure')); }
 describe("TestRunner", () => {
 
   prop('passed', function() { return this.runner.didPass(); });
-  prop('runner', function() { return new TestRunner(this.tests); }, MEMOIZE);
+  prop('runner', function() { return new TestRunner(this.tests); });
 
-  prop('firstConstructor', newStub,         MEMOIZE);
-  prop('firstTestMethod',  newStub,         MEMOIZE);
-  prop('secondTestMethod', newResolveStub,  MEMOIZE);
+  prop('firstConstructor', newStub);
+  prop('firstTestMethod',  newStub);
+  prop('secondTestMethod', newResolveStub);
 
-  prop('FirstTest',  newTestCase('first'),  MEMOIZE);
-  prop('SecondTest', newTestCase('second'), MEMOIZE);
+  prop('FirstTest',  newTestCase('first'));
+  prop('SecondTest', newTestCase('second'));
 
 
   context("with one or more tests", () => {
 
-    prop('tests', function() { return [this.FirstTest, this.SecondTest]; }, MEMOIZE);
+    prop('tests', function() { return [this.FirstTest, this.SecondTest]; });
 
     before(function() { return this.runner.run(); });
 
@@ -52,7 +50,7 @@ describe("TestRunner", () => {
 
     context("when a test is pending", () => {
 
-      prop('firstConstructor', () => function() { this.setPending(true); },  MEMOIZE);
+      prop('firstConstructor', () => function() { this.setPending(true); });
 
       it("passes", function() {
         expect(this.passed).to.be.true;
@@ -62,7 +60,7 @@ describe("TestRunner", () => {
 
     context("when a test constructor throws an exception", () => {
 
-      prop('firstConstructor', newErrorStub, MEMOIZE);
+      prop('firstConstructor', newErrorStub);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -72,7 +70,7 @@ describe("TestRunner", () => {
 
     context("when a test throws an exception", () => {
 
-      prop('firstTestMethod', newErrorStub, MEMOIZE);
+      prop('firstTestMethod', newErrorStub);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -82,7 +80,7 @@ describe("TestRunner", () => {
 
     context("when a test fails", () => {
 
-      prop('firstDidSucceedMethod', newFalseStub, MEMOIZE);
+      prop('firstDidSucceedMethod', newFalseStub);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;
@@ -92,7 +90,7 @@ describe("TestRunner", () => {
 
     context("when a test rejects", () => {
 
-      prop('firstRunMethod', newRejectStub, MEMOIZE);
+      prop('firstRunMethod', newRejectStub);
 
       it("does not pass", function() {
         expect(this.passed).to.be.false;

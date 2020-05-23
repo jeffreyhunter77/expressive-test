@@ -8,8 +8,6 @@ var sinon = require('sinon')
 
 chai.use(sinonChai);
 
-const MEMOIZE = {memoize: true};
-
 function newSpy() { return sinon.spy(); }
 function newResolveStub() { return sinon.stub().resolves(1); }
 function newRejectStub()  { return sinon.stub().rejects(new Error('failure')); }
@@ -19,24 +17,24 @@ describe(TestSuite, () => {
   prop('subject', function() { return new this.describedClass(); });
 
   describe('.run()', () => {
-    prop('testStartedListener',   newSpy, MEMOIZE);
-    prop('testCompletedListener', newSpy, MEMOIZE);
-    prop('testCreatedListener',   newSpy, MEMOIZE);
-    prop('testErrorListener',     newSpy, MEMOIZE);
+    prop('testStartedListener',   newSpy);
+    prop('testCompletedListener', newSpy);
+    prop('testCreatedListener',   newSpy);
+    prop('testErrorListener',     newSpy);
 
-    prop('firstTestMethod',  newResolveStub, MEMOIZE);
-    prop('secondTestMethod', newResolveStub, MEMOIZE);
-    prop('failureMethod',    newRejectStub,  MEMOIZE);
+    prop('firstTestMethod',  newResolveStub);
+    prop('secondTestMethod', newResolveStub);
+    prop('failureMethod',    newRejectStub);
     prop('testFunctions',    []);
 
-    prop('beforeRunMethod',     newResolveStub, MEMOIZE);
-    prop('afterRunMethod',      newResolveStub, MEMOIZE);
-    prop('beforeTestRunMethod', newResolveStub, MEMOIZE);
-    prop('afterTestRunMethod',  newResolveStub, MEMOIZE);
+    prop('beforeRunMethod',     newResolveStub);
+    prop('afterRunMethod',      newResolveStub);
+    prop('beforeTestRunMethod', newResolveStub);
+    prop('afterTestRunMethod',  newResolveStub);
 
     prop('tests', function() {
       return this.testFunctions.map((f, i) => it(`test #${i}`, f));
-    }, MEMOIZE);
+    });
 
     prop('subject', function() {
       class CustomTestSuite extends TestSuite {
@@ -54,7 +52,7 @@ describe(TestSuite, () => {
       subject.addListener('test-error', this.testErrorListener);
 
       return subject;
-    }, MEMOIZE);
+    });
 
     before(function() { return this.subject.run(); });
 
@@ -145,7 +143,7 @@ describe(TestSuite, () => {
       context('with a pending test', () => {
         prop('tests', function() {
           return this.testFunctions.map((f, i) => it(`test #${i}`));
-        }, MEMOIZE);
+        });
 
         it('succeeds', function() {
           expect(this.subject.didSucceed()).to.be.true;
@@ -157,12 +155,12 @@ describe(TestSuite, () => {
           return class extends TestCase {
             constructor(c) { super(c); throw new Error('failure'); }
           };
-        }, MEMOIZE);
+        });
 
         prop('tests', function() { return [
           this.errorTest,
           it("test #2", this.secondTestMethod)
-        ]; }, MEMOIZE);
+        ]; });
 
         it("emits a test-error event", function() {
           expect(this.testErrorListener)
@@ -184,9 +182,9 @@ describe(TestSuite, () => {
           InnerSuite.prototype.tests = () => this.innerTests;
 
           return new InnerSuite(this.subject);
-        }, MEMOIZE);
+        });
 
-        prop('innerTests', function() { return [ it('runs', () => true) ]; }, MEMOIZE);
+        prop('innerTests', function() { return [ it('runs', () => true) ]; });
 
         before(function() { return this.innerSuite.run(); });
 
@@ -202,7 +200,7 @@ describe(TestSuite, () => {
       });
 
       context('when _beforeRun rejects', () => {
-        prop('beforeRunMethod', newRejectStub, MEMOIZE);
+        prop('beforeRunMethod', newRejectStub);
 
         it("emits a test-error event", function() {
           expect(this.testErrorListener)
@@ -219,7 +217,7 @@ describe(TestSuite, () => {
       });
 
       context('when _afterRun rejects', () => {
-        prop('afterRunMethod', newRejectStub, MEMOIZE);
+        prop('afterRunMethod', newRejectStub);
 
         it("emits a test-error event", function() {
           expect(this.testErrorListener)

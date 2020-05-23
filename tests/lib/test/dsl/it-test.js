@@ -11,7 +11,7 @@ chai.use(sinonChai);
 describe("it()", () => {
 
   prop('summary',         'assertion summary');
-  prop('body',            function() { return sinon.spy(); }, {memoize: true});
+  prop('body',            function() { return sinon.spy(); });
   prop('result',          function() { return dsl.it(this.summary, this.body); });
   prop('testInstance',    function() { return new this.result(); });
   prop('testDescription', function() { return this.testInstance.description(); });
