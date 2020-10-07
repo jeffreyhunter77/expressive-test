@@ -6,7 +6,7 @@ I have found it challenging to write tests this way in Javascript. In spite of m
 
 I created this library to experiment with ways to write more succinct and expressive tests. I have started to find some patterns that are helpful and would like to share them.
 
-I hope others will try out what I've been working on and that they'll in turn share how this does or does not help with their particular testing issues. Be aware, however, that this is more playground than productized test tool. No features should be considered stable. Futures versions may drastically change how even fundamental things here work. That's sort of the point of a playground.
+I hope others will try out what I've been working on and that they'll in turn share how this does or does not help with their particular testing issues. Be aware, however, that this is more playground than productized test tool. No features should be considered stable. Future versions may drastically change how even fundamental things here work. That's sort of the point of a playground.
 
 I will, however, adhere to semantic versioning. An upgrade path, if there ever is one, may require significant rework, but that will be labeled with a major version number change. It won't suddenly appear in a minor version bump.
 
@@ -42,12 +42,12 @@ Unlike mocha, tests are not supplied callbacks. That is to say, no `done` functi
 
 The chai `expect` function is available globally as `expect`, although you may use any assertion library you choose. As with other test frameworks, a test passes if it does not throw an exception or reject.
 
-For the test declaration functions to be available, you must import the expressive-test library. That is not supplied by the test runner. You can do that in each test file if you choose. I prefer to create a setup file at the top of my test directory and include it instead. The setup file can then include the library and do any other initialization that's required.
+For the test declaration functions to be available, you must require the expressive-test module. That is not supplied by the test runner. You can do that in each test file if you choose. I prefer to create a setup file at the top of my test directory and include it instead. The setup file can then include this module and do any other initialization that's required.
 
 <a name="section_understanding_test_properties"></a>
 ### Understanding Test Properties
 
-The time that I first started writing code to run under Node.js coincided with my journey toward more test-driven development. I had previously written a lot of unit tests in PHP, so when I first used Mocha, it seemed like a big step forward. Later, I found myself working in a Rails environment with Rspec. I had written pleny of code in Ruby before, but it was my first significant use of Rspec. That was a great experience, and it was the first time I felt like I was getting any good at writing tests.
+The time that I first started writing code to run under Node.js coincided with my journey toward more test-driven development. I had previously written a lot of unit tests in PHP, so when I first used Mocha, it seemed like a big step forward. Later, I found myself working in a Rails environment with Rspec. I had written plenty of code in Ruby before, but it was my first significant use of Rspec. That was a great experience, and it was the first time I felt like I was getting any good at writing tests.
 
 One of the game changers for me were the `let` and `let!` statements that Rspec provides. ES6, of course, gives us a native `let` keyword, but it's not as useful as the method in Rspec.
 
@@ -221,7 +221,7 @@ In this particular example I created quite a few properties, but it's helpful fo
 
 If it's not clear how this might be useful, I'd ask you to consider something like the file system mocking above. Here the file system setup is simple, so it can be mocked in each describe block with the setup needed for that section. That doesn't scale up very well, though. If the mock setup is more complicated, it gets tedious to have to redeclare it for each example. It can also be hard to maintain over time. If you need to add an additional setting to the mock in the future, you're forced to update each test. In the past I've dealt with that by adding utility functions to my test files to help with the setup.
 
-Properties are another way to solve this problem. In the example above with properties I only have to setup the mock once. If I want to change what goes into the mock, I only need to override the single property I want to change and that's the value that's used when the mock is created for that section. It also means if I need to alter the mock in the future, I only have to do that in one place. Utility functions can achieve a similar result. I just find it's faster for me to set up with properties.
+Properties are another way to solve this problem. In the example above, using properties I only have to setup the mock once. If I want to change what goes into the mock, I only need to override the single property I want to change and that's the value that's used when the mock is created for that section. It also means if I need to alter the mock in the future, I only have to do that in one place. Utility functions can achieve a similar result. I just find it's faster for me to set up with properties.
 
 One technical detail to make note of here is the use of `this`. Properties are accessed at runtime through the use of `this`, which unfortunately precludes the use of arrow functions when you want to refer to properties, since that would bind `this` to the declaration context instead of the runtime context. That is why you see `function` being used to declare functions passed to `it` and `before` blocks above. If you are not referring to `this` in the function body, it is safe to use an arrow function. If you are using `this` to refer to a property, you must use `function`.
 
