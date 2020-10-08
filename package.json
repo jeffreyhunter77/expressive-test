@@ -12,7 +12,7 @@
   "author": "Jeffrey Hunter <jeff@missioncriticallabs.com>",
   "license": "MIT",
   "private": false,
-  "respository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/jeffreyhunter77/expressive-test.git"
   },
