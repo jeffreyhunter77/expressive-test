@@ -12,7 +12,8 @@
   "author": "Jeffrey Hunter <jeff@missioncriticallabs.com>",
   "license": "MIT",
   "private": false,
-  "respository": {
+  "keywords": ["test", "testing", "tdd", "bdd"],
+  "repository": {
     "type": "git",
     "url": "https://github.com/jeffreyhunter77/expressive-test.git"
   },

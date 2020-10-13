@@ -32,11 +32,22 @@ describe("it()", () => {
     expect(this.body).to.not.have.been.called;
   });
 
-  it("evaluates the body during the test run", function() {
-    return this.testInstance.run()
-      .then(() => {
-        expect(this.body).to.have.been.calledOnce;
-      });
+  context("when the test is run", function() {
+
+    before(async function() { await this.testInstance.run(); });
+
+    it("evaluates the body", function() {
+      expect(this.body).to.have.been.calledOnce;
+    });
+
+    it("uses the test case instance for 'this'", function() {
+      expect(this.body).to.have.been.calledOn(this.testInstance);
+    });
+
+    it("passes the test case instance", async function() {
+      expect(this.body).to.have.been.calledWith(this.testInstance);
+    });
+
   });
 
   context("without a body", function() {
