@@ -46,4 +46,19 @@ describe("after()", () => {
 
   });
 
+  context("when calling the function", () => {
+
+    let hook = sinon.stub();
+
+    before(hook);
+
+    it("sets 'this' to the current test", function() {
+      expect(hook).to.have.been.calledOn(this);
+    });
+
+    it("passes the current test as an argument", function() {
+      expect(hook).to.have.been.calledWith(this);
+    });
+
+  });
 });
