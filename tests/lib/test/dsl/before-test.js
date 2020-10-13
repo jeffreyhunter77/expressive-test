@@ -15,6 +15,10 @@ describe("before()", () => {
 
   before(function() { return this.callback(); });
 
+  it('aliases beforeEach to before', () => {
+    expect(beforeEach).to.equal(before);
+  });
+
   it('is evaluated before tests in the same context', function() {
     expect(this.callback).to.have.been.called;
   });
