@@ -223,7 +223,17 @@ If it's not clear how this might be useful, I'd ask you to consider something li
 
 Properties are another way to solve this problem. In the example above, using properties I only have to setup the mock once. If I want to change what goes into the mock, I only need to override the single property I want to change and that's the value that's used when the mock is created for that section. It also means if I need to alter the mock in the future, I only have to do that in one place. Utility functions can achieve a similar result. I just find it's faster for me to set up with properties.
 
-One technical detail to make note of here is the use of `this`. Properties are accessed at runtime through the use of `this`, which unfortunately precludes the use of arrow functions when you want to refer to properties, since that would bind `this` to the declaration context instead of the runtime context. That is why you see `function` being used to declare functions passed to `it` and `before` blocks above. If you are not referring to `this` in the function body, it is safe to use an arrow function. If you are using `this` to refer to a property, you must use `function`.
+One technical detail to make note of here is the use of `this`. Properties are accessed at runtime through the use of `this`. That is why you see `function` being used to declare functions passed to `it` and `before` blocks above. That won't work with arrow functions. For this reason, the same value is also provided as the only argument to the function.
+
+For example, I could rewrite the first "it" test above as:
+
+```javascript
+it('returns all items', async (test) => {
+  expect(await test.result).to.deep.equal([test.item1, test.item2]);
+});
+```
+
+If you are using `this` to refer to a property in a function body, you must use `function`, not an arrow function. If you wish to use an arrow function, use the function argument instead of `this`. That substitution works for `prop`, `property`, `before`, `after`, and `it`.
 
 <a name="section_test_dsl"></a>
 ## Test DSL
@@ -261,6 +271,10 @@ If you prefer not to pollute the global namespace, you could instead require `ex
 
  * `callback`: **Function** A function to call after each test
 
+   The callback is passed the following arguments:
+
+   * `test`: **TestCase** The test case that ran
+
 **Return Value**
 
 `undefined`
@@ -269,7 +283,7 @@ If you prefer not to pollute the global namespace, you could instead require `ex
 
 Accepts a function to be called after the completion of each test. Note that this is the equivalent of an afterEach function, which is different from other test frameworks.
 
-No arguments are passed to the callback function. The value of `this` is the `TestCase` that ran. The callback may return a Promise.
+The value of `this` is the `TestCase` that ran. The `TestCase` is also passed as a single argument to the function, which is useful if you supply an arrow function. The callback may return a Promise.
 
 `after` may only be called inside of a `describe` or `context` block. If it is called more than once in the same block, the provided functions are called in the order they were supplied.
 
@@ -303,6 +317,10 @@ No arguments are passed to the callback function. The value of `this` is the `Te
 
  * `callback`: **Function** A function to call before each test
 
+   The callback is passed the following arguments:
+
+   * `test`: **TestCase** The test case that is to be run
+
 **Return Value**
 
 `undefined`
@@ -311,7 +329,7 @@ No arguments are passed to the callback function. The value of `this` is the `Te
 
 Accepts a function to be called before each test begins. Note that this is the equivalent of a beforeEach function, which is different from other test frameworks.
 
-No arguments are passed to the callback function. The value of `this` is the `TestCase` that is to be run. The callback may return a Promise.
+The value of `this` is the `TestCase` that is to be run. The `TestCase` is also passed as a single argument to the function, which is useful if you supply an arrow function. The callback may return a Promise.
 
 `before` may only be called inside of a `describe` or `context` block. If it is called more than once in the same block, the provided functions are called in the order they were supplied.
 
@@ -374,6 +392,10 @@ Chai's `expect` function. See [chaijs.com](https://www.chaijs.com) for more info
  * `description`: **String** A description of the expected outcome
  * `testFunction`: **Function** A function which defines the test and performs any assertions
 
+   The `testFunction` receives the following arguments:
+
+   * `test`: **TestCase** The test case being run
+
    If `testFunction` is omitted, it creates a pending test.
 
 **Return Value**
@@ -384,7 +406,7 @@ The created `TestCase`.
 
 Defines a new test or example.
 
-No arguments are passed to `testFunction`. It is invoked when the test is run. The value of `this` is the `TestCase` being run. The function may return a Promise. If it throws an exception or rejects, the test fails. Otherwise, it is considered to have succeeded.
+`testFunction` is invoked when the test is run. The value of `this` is the `TestCase` being run. The `TestCase` is also passed as a single argument to the function, which is useful if you supply an arrow function. The function may return a Promise. If it throws an exception or rejects, the test fails. Otherwise, it is considered to have succeeded.
 
 `it` may only be called inside of a `describe` or `context` block.
 
@@ -409,7 +431,9 @@ No arguments are passed to `testFunction`. It is invoked when the test is run. T
 
 Defines a property available to all tests in the section where the property is defined. Properties are inherited by nested sections and may also be overridden.
 
-The `definition` may be a literal value for the property. If `definition` is a function, it is used as a getter function for the property. A getter function is called with no arguments. The value of `this` in the function is the `TestCase` being run.
+The `definition` may be a literal value for the property. If `definition` is a function, it is used as a getter function for the property.
+
+For a getter function, the value of `this` is the `TestCase` being run. Unlike traditional getter functions, it is passed a single argument, which is also the value of the `TestCase` being run. That is to facilitate the use of arrow functions, where `this` cannot be altered.
 
 By default, getter functions are memoized. That is, after they are invoked the first time time, that return value is used for any subsequent property access (and the getter function is not invoked). Note that getter functions are not invoked until the property is first accessed. In effect, they are lazily evaluated.
 

@@ -52,6 +52,24 @@ describe("property()", () => {
       expect(this.subject).to.equal(this.subject);
     });
 
+    context("when calling the function", () => {
+
+      let getterFunction = sinon.stub();
+
+      property('subject', getterFunction);
+
+      before(function() { this.subject });
+
+      it("sets 'this' to the current test", function() {
+        expect(getterFunction).to.have.been.calledOn(this);
+      });
+
+      it("passes the current test as an argument", function() {
+        expect(getterFunction).to.have.been.calledWith(this);
+      });
+
+    });
+
     context("when the function returns undefined", () => {
 
       let fn = sinon.stub();
@@ -74,6 +92,24 @@ describe("property()", () => {
 
     it("does not memoize the function", function() {
       expect(this.subject).to.not.equal(this.subject);
+    });
+
+    context("when calling the function", () => {
+
+      let getterFunction = sinon.stub();
+
+      property('subject', getterFunction, {memoize: false});
+
+      before(function() { this.subject });
+
+      it("sets 'this' to the current test", function() {
+        expect(getterFunction).to.have.been.calledOn(this);
+      });
+
+      it("passes the current test as an argument", function() {
+        expect(getterFunction).to.have.been.calledWith(this);
+      });
+
     });
 
   });
