@@ -16,8 +16,10 @@ global.xit = dsl.xit;
 global.property = dsl.property;
 global.prop = dsl.property;
 global.before = dsl.before;
+global.beforeEach = dsl.before;
 global.beforeAll = dsl.beforeAll;
 global.after = dsl.after;
+global.afterEach = dsl.after;
 global.afterAll = dsl.afterAll;
 
 global.expect = chai.expect;

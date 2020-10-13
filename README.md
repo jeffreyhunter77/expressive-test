@@ -242,8 +242,10 @@ When included, this library declares the following globals:
 
  * [after](#dsl_after)
  * [afterAll](#dsl_afterAll)
+ * [afterEach](#dsl_after)
  * [before](#dsl_before)
  * [beforeAll](#dsl_beforeAll)
+ * [beforeEach](#dsl_before)
  * [context](#dsl_describe)
  * [describe](#dsl_describe)
  * [expect](#dsl_expect)
@@ -260,6 +262,10 @@ If you prefer not to pollute the global namespace, you could instead require `ex
 
 <a name="dsl_after"></a>
 ### after(callback)
+
+**Aliases**
+
+ * afterEach
 
 **Parameters**
 
@@ -302,6 +308,10 @@ No arguments are passed to the callback function. The value of `this` is the `Te
 
 <a name="dsl_before"></a>
 ### before(callback)
+
+**Aliases**
+
+ * beforeEach
 
 **Parameters**
 

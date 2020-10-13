@@ -61,4 +61,9 @@ describe("after()", () => {
     });
 
   });
+
+  it('aliases afterEach to after', () => {
+    expect(afterEach).to.equal(after);
+  });
+
 });
